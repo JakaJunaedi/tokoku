@@ -153,6 +153,7 @@
               <th class="w-12">ID</th>
               <th>Nama Produk</th>
               <th class="text-right">Harga Satuan</th>
+              <th class="text-center w-24">Stok</th>
               <th>Tanggal Dibuat</th>
               <th class="text-center w-36">Aksi</th>
             </tr>
@@ -166,6 +167,11 @@
                 </td>
                 <td class="text-right font-semibold text-price">
                   {{ formatRupiah(product.price) }}
+                </td>
+                <td class="text-center">
+                  <span class="stock-badge" [class.stock-empty]="(product.stock ?? 0) === 0">
+                    {{ product.stock ?? 0 }} unit
+                  </span>
                 </td>
                 <td class="text-muted text-sm">
                   {{ product.createdAt | date:'dd MMM yyyy, HH:mm' }}
@@ -239,6 +245,21 @@
                 step="1000"
                 [disabled]="isSubmitting()"
                 required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="stock">Stok (Unit)</label>
+              <input 
+                id="stock"
+                name="stock"
+                type="number" 
+                [(ngModel)]="stockInput"
+                placeholder="Contoh: 10"
+                class="form-control"
+                min="0"
+                step="1"
+                [disabled]="isSubmitting()"
               />
             </div>
           </div>

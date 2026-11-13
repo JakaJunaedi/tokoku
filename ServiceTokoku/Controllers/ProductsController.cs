@@ -54,7 +54,7 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] Product product)
     {
-        _logger.LogInformation("Request POST /api/products diterima: Data payload {@Product}", new { product.Name, product.Price });
+        _logger.LogInformation("Request POST /api/products diterima: Data payload {@Product}", new { product.Name, product.Price, product.Stock });
 
         if (string.IsNullOrWhiteSpace(product.Name))
         {
@@ -68,6 +68,12 @@ public class ProductsController : ControllerBase
             return BadRequest(new { message = "Harga produk tidak boleh bernilai negatif." });
         }
 
+        if (product.Stock < 0)
+        {
+            _logger.LogWarning("Validasi POST /api/products gagal: Stok bernilai negatif ({Stock}).", product.Stock);
+            return BadRequest(new { message = "Stok produk tidak boleh bernilai negatif." });
+        }
+
         var created = await _productService.CreateAsync(product);
         _logger.LogInformation("Request POST /api/products sukses: Produk baru berhasil disimpan dengan ID {Id} pada {CreatedAt}.", created.Id, created.CreatedAt);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
@@ -79,7 +85,7 @@ public class ProductsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] Product product)
     {
-        _logger.LogInformation("Request PUT /api/products/{Id} diterima: Data update {@Product}", id, new { product.Name, product.Price });
+        _logger.LogInformation("Request PUT /api/products/{Id} diterima: Data update {@Product}", id, new { product.Name, product.Price, product.Stock });
 
         if (string.IsNullOrWhiteSpace(product.Name))
         {
@@ -91,6 +97,12 @@ public class ProductsController : ControllerBase
         {
             _logger.LogWarning("Validasi PUT /api/products/{Id} gagal: Harga bernilai negatif ({Price}).", id, product.Price);
             return BadRequest(new { message = "Harga produk tidak boleh bernilai negatif." });
+        }
+
+        if (product.Stock < 0)
+        {
+            _logger.LogWarning("Validasi PUT /api/products/{Id} gagal: Stok bernilai negatif ({Stock}).", id, product.Stock);
+            return BadRequest(new { message = "Stok produk tidak boleh bernilai negatif." });
         }
 
         var updated = await _productService.UpdateAsync(id, product);

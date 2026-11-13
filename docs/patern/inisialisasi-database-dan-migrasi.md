@@ -156,3 +156,58 @@ dotnet ef migrations script --project Migration.Tokoku --startup-project Service
 # Menghasilkan script idempotent (aman dijalankan berulang kali)
 dotnet ef migrations script --idempotent --project Migration.Tokoku --startup-project ServiceTokoku -o migration.sql
 ```
+
+---
+
+## 4. Riwayat & Catatan Migrasi Database (*Generated Migration Log*)
+
+Seluruh perubahan skema tabel di Tokoku dilakukan murni melalui generator EF Core CLI (`dotnet ef migrations add`), tanpa penulisan manual file migrasi.
+
+### 4.1 `InitialCreate`
+- **Tujuan**: Inisialisasi awal skema tabel `Products` (kolom: `Id`, `Name`, `Price`, `CreatedAt`).
+- **Perintah generate**:
+  ```bash
+  dotnet ef migrations add InitialCreate --project Migration.Tokoku --startup-project ServiceTokoku
+  ```
+
+### 4.2 `AddStockToProduct`
+- **Tujuan**: Menambahkan kolom `Stock` (integer, default `0`) pada tabel `Products`.
+- **Perintah generate**:
+  ```bash
+  dotnet ef migrations add AddStockToProduct --project Migration.Tokoku --startup-project ServiceTokoku
+  ```
+- **File hasil generate**: [`Migration.Tokoku/Migrations/20261113212811_AddStockToProduct.cs`](file:///D:/Jack/dotnet/tokoku/Migration.Tokoku/Migrations/20261113212811_AddStockToProduct.cs)
+- **Cuplikan DDL hasil generate otomatis**:
+  ```csharp
+  protected override void Up(MigrationBuilder migrationBuilder)
+  {
+      migrationBuilder.AddColumn<int>(
+          name: "Stock",
+          table: "Products",
+          type: "integer",
+          nullable: false,
+          defaultValue: 0);
+  }
+
+  protected override void Down(MigrationBuilder migrationBuilder)
+  {
+      migrationBuilder.DropColumn(
+          name: "Stock",
+          table: "Products");
+  }
+  ```
+- **Penerapan ke database**:
+  ```bash
+  dotnet ef database update --project Migration.Tokoku --startup-project ServiceTokoku
+  ```
+- **Verifikasi Skema Tabel Terkini di PostgreSQL**:
+  ```text
+   column_name |        data_type         |  column_default   
+  -------------+--------------------------+-------------------
+   Id          | integer                  | 
+   Price       | numeric                  | 
+   CreatedAt   | timestamp with time zone | CURRENT_TIMESTAMP
+   Stock       | integer                  | 0
+   Name        | character varying        | 
+  ```
+

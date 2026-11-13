@@ -94,7 +94,7 @@ try
     Log.Information("Aplikasi siap menerima request pada konfigurasi port yang ditentukan.");
     app.Run();
 }
-catch (Exception ex)
+catch (Exception ex) when (ex is not HostAbortedException)
 {
     Log.Fatal(ex, "Aplikasi Backend Tokoku mengalami kegagalan saat startup.");
 }

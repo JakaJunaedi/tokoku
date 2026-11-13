@@ -49,6 +49,7 @@ public class ProductService : IProductService
 
         existing.Name = product.Name;
         existing.Price = product.Price;
+        existing.Stock = product.Stock;
 
         _logger.LogDebug("Menyimpan pembaruan entitas ID={Id} ke PostgreSQL...", id);
         await _dbContext.SaveChangesAsync();

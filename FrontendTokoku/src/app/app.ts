@@ -32,6 +32,7 @@ export class App implements OnInit {
   // Form State
   nameInput = '';
   priceInput: number | null = null;
+  stockInput: number | null = null;
   formError = '';
 
   // Computed Values
@@ -89,6 +90,7 @@ export class App implements OnInit {
     this.activeProductId.set(null);
     this.nameInput = '';
     this.priceInput = null;
+    this.stockInput = null;
     this.formError = '';
     this.isModalOpen.set(true);
   }
@@ -98,6 +100,7 @@ export class App implements OnInit {
     this.activeProductId.set(product.id ?? null);
     this.nameInput = product.name;
     this.priceInput = product.price;
+    this.stockInput = product.stock ?? 0;
     this.formError = '';
     this.isModalOpen.set(true);
   }
@@ -110,6 +113,7 @@ export class App implements OnInit {
   saveProduct(): void {
     const name = this.nameInput.trim();
     const price = Number(this.priceInput);
+    const stock = this.stockInput === null || isNaN(Number(this.stockInput)) ? 0 : Number(this.stockInput);
 
     if (!name) {
       this.formError = 'Nama produk wajib diisi.';
@@ -121,13 +125,18 @@ export class App implements OnInit {
       return;
     }
 
+    if (stock < 0) {
+      this.formError = 'Stok produk tidak boleh bernilai negatif.';
+      return;
+    }
+
     this.isSubmitting.set(true);
     this.formError = '';
 
     if (this.isEditing() && this.activeProductId()) {
       // Update
       const id = this.activeProductId()!;
-      this.productService.updateProduct(id, { name, price }).subscribe({
+      this.productService.updateProduct(id, { name, price, stock }).subscribe({
         next: (updated) => {
           this.products.update(list => list.map(item => item.id === id ? updated : item));
           this.isSubmitting.set(false);
@@ -142,7 +151,7 @@ export class App implements OnInit {
       });
     } else {
       // Create
-      this.productService.createProduct({ name, price }).subscribe({
+      this.productService.createProduct({ name, price, stock }).subscribe({
         next: (created) => {
           this.products.update(list => [...list, created]);
           this.isSubmitting.set(false);
