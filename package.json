@@ -1,0 +1,16 @@
+{
+  "name": "tokoku",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplikasi Tokoku (ASP.NET Core & Angular)",
+  "scripts": {
+    "prepare": "husky",
+    "test": "echo \"Running pre-commit check...\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
