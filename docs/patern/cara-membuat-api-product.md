@@ -352,3 +352,60 @@ Invoke-RestMethod -Uri "http://localhost:5242/api/products/1" -Method Put -Conte
 # 6. Hapus produk (DELETE)
 Invoke-RestMethod -Uri "http://localhost:5242/api/products/1" -Method Delete
 ```
+
+---
+
+## 8. Relasi Produk dengan Kategori & CRUD Kategori
+
+### 8.1 Model Entity Kategori
+File: [`Model.Tokoku/Category.cs`](file:///D:/Jack/dotnet/tokoku/Model.Tokoku/Category.cs)
+```csharp
+namespace Model.Tokoku;
+
+public class Category
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    [JsonIgnore]
+    public ICollection<Product> Products { get; set; } = new List<Product>();
+}
+```
+
+### 8.2 Relasi pada Product Entity
+File: [`Model.Tokoku/Product.cs`](file:///D:/Jack/dotnet/tokoku/Model.Tokoku/Product.cs)
+```csharp
+public class Product
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public decimal Price { get; set; }
+    public int Stock { get; set; } = 0;
+    public decimal Discount { get; set; } = 0;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Foreign Key dan Navigation Property ke Category
+    public int? CategoryId { get; set; }
+    public Category? Category { get; set; }
+}
+```
+
+### 8.3 CRUD Categories API
+File Controller: [`ServiceTokoku/Controllers/CategoriesController.cs`](file:///D:/Jack/dotnet/tokoku/ServiceTokoku/Controllers/CategoriesController.cs)
+- `GET /api/categories`: Mengambil semua kategori.
+- `GET /api/categories/{id}`: Mengambil detail kategori berdasarkan ID.
+- `POST /api/categories`: Menambahkan kategori baru (validasi nama wajib).
+- `PUT /api/categories/{id}`: Memperbarui nama dan deskripsi kategori.
+- `DELETE /api/categories/{id}`: Menghapus kategori dari database.
+
+### 8.4 Eager Loading Relasi di `ProductService`
+Di [`ServiceTokoku/Services/ProductService.cs`](file:///D:/Jack/dotnet/tokoku/ServiceTokoku/Services/ProductService.cs), relasi kategori di-load menggunakan `.Include(p => p.Category)` sehingga payload API produk otomatis menyertakan detail kategori:
+```csharp
+return await _dbContext.Products
+    .Include(p => p.Category)
+    .OrderBy(p => p.Id)
+    .ToListAsync();
+```
+

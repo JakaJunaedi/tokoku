@@ -19,6 +19,7 @@ public class ProductService : IProductService
     {
         _logger.LogDebug("Mengeksekusi query database untuk mengambil seluruh entitas produk...");
         return await _dbContext.Products
+            .Include(p => p.Category)
             .OrderBy(p => p.Id)
             .ToListAsync();
     }
@@ -26,7 +27,9 @@ public class ProductService : IProductService
     public async Task<Product?> GetByIdAsync(int id)
     {
         _logger.LogDebug("Mengeksekusi query database mencari produk dengan Primary Key ID={Id}...", id);
-        return await _dbContext.Products.FindAsync(id);
+        return await _dbContext.Products
+            .Include(p => p.Category)
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Product> CreateAsync(Product product)
@@ -51,6 +54,7 @@ public class ProductService : IProductService
         existing.Price = product.Price;
         existing.Stock = product.Stock;
         existing.Discount = product.Discount;
+        existing.CategoryId = product.CategoryId;
 
         _logger.LogDebug("Menyimpan pembaruan entitas ID={Id} ke PostgreSQL...", id);
         await _dbContext.SaveChangesAsync();

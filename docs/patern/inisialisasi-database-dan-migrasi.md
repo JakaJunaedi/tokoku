@@ -253,3 +253,94 @@ Seluruh perubahan skema tabel di Tokoku dilakukan murni melalui generator EF Cor
    Name        | character varying        | 
   ```
 
+### 4.4 `AddCategoryAndProductRelation`
+- **Tujuan**: Menambahkan tabel `Category` dan kolom relasi Foreign Key `CategoryId` pada tabel `Products`.
+- **Perintah generate otomatis** (*tanpa penulisan manual*):
+  ```bash
+  dotnet ef migrations add AddCategoryAndProductRelation --project Migration.Tokoku --startup-project ServiceTokoku
+  ```
+- **File hasil generate**: [`Migration.Tokoku/Migrations/20261113215647_AddCategoryAndProductRelation.cs`](file:///D:/Jack/dotnet/tokoku/Migration.Tokoku/Migrations/20261113215647_AddCategoryAndProductRelation.cs)
+- **Cuplikan C# Migration hasil generate otomatis**:
+  ```csharp
+  protected override void Up(MigrationBuilder migrationBuilder)
+  {
+      migrationBuilder.AddColumn<int>(
+          name: "CategoryId",
+          table: "Products",
+          type: "integer",
+          nullable: true);
+
+      migrationBuilder.CreateTable(
+          name: "Category",
+          columns: table => new
+          {
+              Id = table.Column<int>(type: "integer", nullable: false)
+                  .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+              Name = table.Column<string>(type: "text", nullable: false),
+              Description = table.Column<string>(type: "text", nullable: true),
+              CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+          },
+          constraints: table =>
+          {
+              table.PrimaryKey("PK_Category", x => x.Id);
+          });
+
+      migrationBuilder.CreateIndex(
+          name: "IX_Products_CategoryId",
+          table: "Products",
+          column: "CategoryId");
+
+      migrationBuilder.AddForeignKey(
+          name: "FK_Products_Category_CategoryId",
+          table: "Products",
+          column: "CategoryId",
+          principalTable: "Category",
+          principalColumn: "Id");
+  }
+
+  protected override void Down(MigrationBuilder migrationBuilder)
+  {
+      migrationBuilder.DropForeignKey(
+          name: "FK_Products_Category_CategoryId",
+          table: "Products");
+
+      migrationBuilder.DropTable(
+          name: "Category");
+
+      migrationBuilder.DropIndex(
+          name: "IX_Products_CategoryId",
+          table: "Products");
+
+      migrationBuilder.DropColumn(
+          name: "CategoryId",
+          table: "Products");
+  }
+  ```
+- **Penerapan ke database**:
+  ```bash
+  dotnet ef database update --project Migration.Tokoku --startup-project ServiceTokoku
+  ```
+- **Verifikasi Skema Tabel Terkini di PostgreSQL**:
+  - **Tabel `Category`**:
+    ```text
+     column_name |        data_type         | is_nullable 
+    -------------+--------------------------+-------------
+     Id          | integer                  | NO
+     CreatedAt   | timestamp with time zone | NO
+     Name        | text                     | NO
+     Description | text                     | YES
+    ```
+  - **Tabel `Products`**:
+    ```text
+     column_name |        data_type         | is_nullable 
+    -------------+--------------------------+-------------
+     Id          | integer                  | NO
+     Name        | character varying        | NO
+     Price       | numeric                  | NO
+     Stock       | integer                  | NO
+     Discount    | numeric                  | NO
+     CreatedAt   | timestamp with time zone | NO
+     CategoryId  | integer                  | YES
+    ```
+
+

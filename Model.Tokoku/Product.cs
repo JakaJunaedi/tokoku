@@ -8,4 +8,8 @@ public class Product
     public int Stock { get; set; } = 0;
     public decimal Discount { get; set; } = 0;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // Relasi ke Category
+    public int? CategoryId { get; set; }
+    public Category? Category { get; set; }
 }

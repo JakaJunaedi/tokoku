@@ -36,6 +36,7 @@ try
 
     // Register Application Services (Dependency Injection)
     builder.Services.AddScoped<IProductService, ProductService>();
+    builder.Services.AddScoped<ICategoryService, CategoryService>();
 
     // CORS for Frontend Tokoku (Angular)
     builder.Services.AddCors(options =>
