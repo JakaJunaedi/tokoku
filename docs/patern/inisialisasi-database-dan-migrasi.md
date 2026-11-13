@@ -211,3 +211,45 @@ Seluruh perubahan skema tabel di Tokoku dilakukan murni melalui generator EF Cor
    Name        | character varying        | 
   ```
 
+### 4.3 `AddDiscountToProduct`
+- **Tujuan**: Menambahkan kolom `Discount` (numeric, default `0.0`) pada tabel `Products`.
+- **Perintah generate**:
+  ```bash
+  dotnet ef migrations add AddDiscountToProduct --project Migration.Tokoku --startup-project ServiceTokoku
+  ```
+- **File hasil generate**: [`Migration.Tokoku/Migrations/20261113213823_AddDiscountToProduct.cs`](file:///D:/Jack/dotnet/tokoku/Migration.Tokoku/Migrations/20261113213823_AddDiscountToProduct.cs)
+- **Cuplikan DDL hasil generate otomatis**:
+  ```csharp
+  protected override void Up(MigrationBuilder migrationBuilder)
+  {
+      migrationBuilder.AddColumn<decimal>(
+          name: "Discount",
+          table: "Products",
+          type: "numeric",
+          nullable: false,
+          defaultValue: 0m);
+  }
+
+  protected override void Down(MigrationBuilder migrationBuilder)
+  {
+      migrationBuilder.DropColumn(
+          name: "Discount",
+          table: "Products");
+  }
+  ```
+- **Penerapan ke database**:
+  ```bash
+  dotnet ef database update --project Migration.Tokoku --startup-project ServiceTokoku
+  ```
+- **Verifikasi Skema Tabel Terkini di PostgreSQL**:
+  ```text
+   column_name |        data_type         |  column_default   
+  -------------+--------------------------+-------------------
+   Id          | integer                  | 
+   Price       | numeric                  | 
+   CreatedAt   | timestamp with time zone | CURRENT_TIMESTAMP
+   Stock       | integer                  | 0
+   Discount    | numeric                  | 0.0
+   Name        | character varying        | 
+  ```
+

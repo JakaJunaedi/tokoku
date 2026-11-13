@@ -33,6 +33,7 @@ export class App implements OnInit {
   nameInput = '';
   priceInput: number | null = null;
   stockInput: number | null = null;
+  discountInput: number | null = null;
   formError = '';
 
   // Computed Values
@@ -91,6 +92,7 @@ export class App implements OnInit {
     this.nameInput = '';
     this.priceInput = null;
     this.stockInput = null;
+    this.discountInput = null;
     this.formError = '';
     this.isModalOpen.set(true);
   }
@@ -101,6 +103,7 @@ export class App implements OnInit {
     this.nameInput = product.name;
     this.priceInput = product.price;
     this.stockInput = product.stock ?? 0;
+    this.discountInput = product.discount ?? 0;
     this.formError = '';
     this.isModalOpen.set(true);
   }
@@ -114,6 +117,7 @@ export class App implements OnInit {
     const name = this.nameInput.trim();
     const price = Number(this.priceInput);
     const stock = this.stockInput === null || isNaN(Number(this.stockInput)) ? 0 : Number(this.stockInput);
+    const discount = this.discountInput === null || isNaN(Number(this.discountInput)) ? 0 : Number(this.discountInput);
 
     if (!name) {
       this.formError = 'Nama produk wajib diisi.';
@@ -130,13 +134,23 @@ export class App implements OnInit {
       return;
     }
 
+    if (discount < 0) {
+      this.formError = 'Diskon produk tidak boleh bernilai negatif.';
+      return;
+    }
+
+    if (discount > price) {
+      this.formError = 'Diskon tidak boleh melebihi harga produk.';
+      return;
+    }
+
     this.isSubmitting.set(true);
     this.formError = '';
 
     if (this.isEditing() && this.activeProductId()) {
       // Update
       const id = this.activeProductId()!;
-      this.productService.updateProduct(id, { name, price, stock }).subscribe({
+      this.productService.updateProduct(id, { name, price, stock, discount }).subscribe({
         next: (updated) => {
           this.products.update(list => list.map(item => item.id === id ? updated : item));
           this.isSubmitting.set(false);
@@ -151,7 +165,7 @@ export class App implements OnInit {
       });
     } else {
       // Create
-      this.productService.createProduct({ name, price, stock }).subscribe({
+      this.productService.createProduct({ name, price, stock, discount }).subscribe({
         next: (created) => {
           this.products.update(list => [...list, created]);
           this.isSubmitting.set(false);
