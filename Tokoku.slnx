@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="Database.Tokoku/Database.Tokoku.csproj" />
+  <Project Path="Migration.Tokoku/Migration.Tokoku.csproj" />
   <Project Path="Model.Tokoku/Model.Tokoku.csproj" />
   <Project Path="ServiceTokoku/ServiceTokoku.csproj" />
 </Solution>
