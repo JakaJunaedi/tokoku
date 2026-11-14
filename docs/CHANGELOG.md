@@ -15,6 +15,12 @@ Setiap catatan perubahan disajikan dengan struktur:
 
 ## Riwayat Perubahan & Aktivitas
 
+### 14 November 2026, 23:45 WIB
+**Judul: Resolusi Insiden Error Relasi Kategori dan Penggabungan Branch feature/category ke feature/auth**
+- **Kategori**: Insiden Teknis, Git Merge, Sinkronisasi Skema
+- **Deskripsi**: Terjadi kegagalan pemanggilan data produk pada endpoint backend ServiceTokoku dengan respons kode 500 akibat kueri pencarian produk masih menyertakan relasi entitas kategori yang tabel fisiknya telah dihapus dari database PostgreSQL tokoku_db. Dilakukan investigasi mendalam terhadap log aplikasi dan riwayat commit cabang. Masalah diatasi dengan menggabungkan branch feature/category ke dalam branch feature/auth, membersihkan referensi kategori pada model produk dan service backend, serta menyelaraskan antarmuka pengguna frontend dan pengujian unit. Seluruh proses kompilasi backend dan frontend serta pengujian unit diverifikasi sukses, dan data produk kembali dapat diambil secara normal.
+
+
 ### 14 November 2026, 21:50 WIB
 **Judul: Implementasi Guard Protection dan Pembukaan Otomatis Modal Autentikasi pada Dashboard Tokoku**
 - **Kategori**: Keamanan, Antarmuka Pengguna, Frontend
