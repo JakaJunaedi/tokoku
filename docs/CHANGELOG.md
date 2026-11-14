@@ -15,6 +15,12 @@ Setiap catatan perubahan disajikan dengan struktur:
 
 ## Riwayat Perubahan & Aktivitas
 
+### 14 November 2026, 21:50 WIB
+**Judul: Implementasi Guard Protection dan Pembukaan Otomatis Modal Autentikasi pada Dashboard Tokoku**
+- **Kategori**: Keamanan, Antarmuka Pengguna, Frontend
+- **Deskripsi**: Menerapkan proteksi keamanan guard pada frontend Tokoku agar pengguna yang belum terautentikasi tidak dapat melihat, mengakses, memuat, maupun memanipulasi data inventaris produk dan kategori sebelum berhasil melakukan login. Saat aplikasi pertama kali dimuat atau pengguna dalam status belum masuk, sistem secara otomatis memicu pembukaan modal form autentikasi pada tab masuk serta menyajikan tampilan layar guard khusus dengan status dashboard terkunci dan opsi masuk atau daftar. Seluruh pemanggilan fungsi pemuatan data dan aksi pengelolaan produk maupun kategori diproteksi sehingga hanya dapat diproses setelah token autentikasi tervalidasi. Saat pengguna berhasil masuk atau mendaftar, dashboard secara otomatis terbuka dan memuat seluruh data inventaris terkini. Dibuat pula berkas functional guard Angular terpisah sebagai standar proteksi rute di masa mendatang. Seluruh pengujian unit dan pembangunan paket produksi berhasil diverifikasi dengan predikat sukses.
+
+
 ### 14 November 2026, 21:35 WIB
 **Judul: Integrasi Antarmuka Autentikasi Frontend Tokoku (Login, Register, Reset Password, dan Superadmin)**
 - **Kategori**: Fitur Baru, Frontend

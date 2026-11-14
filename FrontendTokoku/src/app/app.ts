@@ -137,10 +137,19 @@ export class App implements OnInit {
   }
 
   ngOnInit(): void {
-    this.refreshAll();
+    if (this.authService.isAuthenticated()) {
+      this.refreshAll();
+    } else {
+      // Guard protect: cegah akses dashboard sebelum login dan buka modal auth
+      this.openAuthModal('login');
+    }
   }
 
   refreshAll(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     this.fetchProducts();
     this.fetchCategories();
   }
@@ -148,6 +157,11 @@ export class App implements OnInit {
   // ================= PRODUK CRUD =================
 
   fetchProducts(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
+
     this.isProductLoading.set(true);
     this.errorMessage.set(null);
 
@@ -165,6 +179,10 @@ export class App implements OnInit {
   }
 
   openCreateModal(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     this.isEditing.set(false);
     this.activeProductId.set(null);
     this.nameInput = '';
@@ -176,6 +194,10 @@ export class App implements OnInit {
   }
 
   openEditModal(product: Product): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     this.isEditing.set(true);
     this.activeProductId.set(product.id ?? null);
     this.nameInput = product.name;
@@ -192,6 +214,10 @@ export class App implements OnInit {
   }
 
   saveProduct(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     const name = this.nameInput.trim();
     const price = Number(this.priceInput);
     const stock = this.stockInput === null || isNaN(Number(this.stockInput)) ? 0 : Number(this.stockInput);
@@ -254,6 +280,10 @@ export class App implements OnInit {
   }
 
   openDeleteModal(product: Product): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     this.productToDelete.set(product);
     this.isDeleteModalOpen.set(true);
   }
@@ -264,6 +294,10 @@ export class App implements OnInit {
   }
 
   confirmDelete(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     const target = this.productToDelete();
     if (!target || !target.id) return;
 
@@ -287,6 +321,9 @@ export class App implements OnInit {
   // ================= KATEGORI CRUD =================
 
   fetchCategories(): void {
+    if (!this.authService.isAuthenticated()) {
+      return;
+    }
     this.isCategoryLoading.set(true);
 
     this.categoryService.getCategories().subscribe({
@@ -302,6 +339,10 @@ export class App implements OnInit {
   }
 
   openCreateCategoryModal(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     this.isCategoryEditing.set(false);
     this.activeCategoryId.set(null);
     this.categoryNameInput = '';
@@ -311,6 +352,10 @@ export class App implements OnInit {
   }
 
   openEditCategoryModal(category: Category): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     this.isCategoryEditing.set(true);
     this.activeCategoryId.set(category.id ?? null);
     this.categoryNameInput = category.name;
@@ -325,6 +370,10 @@ export class App implements OnInit {
   }
 
   saveCategory(): void {
+    if (!this.authService.isAuthenticated()) {
+      this.openAuthModal('login');
+      return;
+    }
     const name = this.categoryNameInput.trim();
     const description = this.categoryDescInput.trim() || undefined;
 
@@ -431,6 +480,7 @@ export class App implements OnInit {
         this.closeAuthModal();
         this.loginEmail = '';
         this.loginPassword = '';
+        this.refreshAll();
         this.showToast(`Selamat datang kembali, ${res.user.fullName}!`);
       },
       error: (err) => {
@@ -466,6 +516,7 @@ export class App implements OnInit {
         this.registerFullName = '';
         this.registerEmail = '';
         this.registerPassword = '';
+        this.refreshAll();
         this.showToast(`Registrasi berhasil! Selamat bergabung, ${res.user.fullName}.`);
       },
       error: (err) => {
@@ -543,6 +594,9 @@ export class App implements OnInit {
   logout(): void {
     const user = this.authService.currentUser();
     this.authService.logout();
+    this.products.set([]);
+    this.categories.set([]);
+    this.openAuthModal('login');
     this.showToast(`Anda telah logout.${user ? ` Sampai jumpa, ${user.fullName}!` : ''}`);
   }
 

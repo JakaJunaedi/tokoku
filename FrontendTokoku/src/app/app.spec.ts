@@ -8,6 +8,8 @@ import { CategoryService } from './services/category.service';
 import { AuthService } from './services/auth.service';
 
 describe('App', () => {
+  let isAuthedState = false;
+
   const mockProductService = {
     getProducts: () => of([]),
     createProduct: () => of({ id: 1, name: 'Test', price: 1000 }),
@@ -28,17 +30,21 @@ describe('App', () => {
   const mockAuthService = {
     token: signal<string | null>(null),
     currentUser: signal(null),
-    isAuthenticated: () => false,
+    isAuthenticated: () => isAuthedState,
     isSuperAdmin: () => false,
-    login: () => of({ token: 'mock-jwt', expiration: '', user: { id: 1, fullName: 'Admin', role: 'SuperAdmin' } }),
+    login: () => {
+      isAuthedState = true;
+      return of({ token: 'mock-jwt', expiration: '', user: { id: 1, fullName: 'Admin', role: 'SuperAdmin' } });
+    },
     register: () => of({ token: 'mock-jwt', expiration: '', user: { id: 2, fullName: 'User', role: 'User' } }),
-    logout: () => {},
+    logout: () => { isAuthedState = false; },
     forgotPassword: () => of({ message: 'Success', resetToken: 'mock-token' }),
     resetPassword: () => of({ message: 'Success' }),
     createSuperadmin: () => of({ id: 3, fullName: 'Superadmin', role: 'SuperAdmin' })
   };
 
   beforeEach(async () => {
+    isAuthedState = false;
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
@@ -64,11 +70,50 @@ describe('App', () => {
     expect(compiled.querySelector('.brand-name')?.textContent).toContain('Tokoku');
   });
 
-  it('should load initial categories and products', async () => {
+  it('should protect dashboard and open auth modal automatically when not authenticated', async () => {
+    isAuthedState = false;
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     await fixture.whenStable();
     const app = fixture.componentInstance;
+
+    // Guard requirement: auth modal opens automatically
+    expect(app.isAuthModalOpen()).toBe(true);
+    expect(app.authTab()).toBe('login');
+    // Products and categories not fetched when unauthenticated
+    expect(app.products().length).toBe(0);
+    expect(app.categories().length).toBe(0);
+
+    // Protected view should display guard locked banner
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.auth-guard-container')).toBeTruthy();
+    expect(compiled.querySelector('.guard-title')?.textContent).toContain('Dashboard Produk Memerlukan Autentikasi');
+  });
+
+  it('should load categories and products when authenticated', async () => {
+    isAuthedState = true;
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const app = fixture.componentInstance;
+
+    expect(app.isAuthModalOpen()).toBe(false);
     expect(app.categories().length).toBe(2);
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.auth-guard-container')).toBeFalsy();
+    expect(compiled.querySelector('.tabs-bar')).toBeTruthy();
+  });
+
+  it('should open auth modal when unauthenticated user attempts to create product', () => {
+    isAuthedState = false;
+    const fixture = TestBed.createComponent(App);
+    const app = fixture.componentInstance;
+    app.closeAuthModal();
+    expect(app.isAuthModalOpen()).toBe(false);
+
+    app.openCreateModal();
+    expect(app.isAuthModalOpen()).toBe(true);
+    expect(app.isModalOpen()).toBe(false);
   });
 });
