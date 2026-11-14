@@ -15,6 +15,11 @@ Setiap catatan perubahan disajikan dengan struktur:
 
 ## Riwayat Perubahan & Aktivitas
 
+### 14 November 2026, 21:35 WIB
+**Judul: Integrasi Antarmuka Autentikasi Frontend Tokoku (Login, Register, Reset Password, dan Superadmin)**
+- **Kategori**: Fitur Baru, Frontend
+- **Deskripsi**: Menghubungkan aplikasi klien FrontendTokoku dengan layanan autentikasi ServiceAuthTokoku. Menyediakan AuthService dengan manajemen status token JWT dan profil pengguna yang tersimpan secara persisten di penyimpanan lokal peramban. Mengimplementasikan komponen visual antarmuka pada navbar berupa status indikator koneksi auth, informasi profil pengguna, badge penanda peran superadmin, tombol logout, serta tombol masuk dan daftar. Mengembangkan modal autentikasi terpadu dengan navigasi tab untuk masuk akun, pendaftaran akun baru, pengajuan token lupa kata sandi, serta pengubahan kata sandi baru. Menambahkan modal khusus bagi superadmin untuk mendaftarkan akun superadmin baru secara langsung dari antarmuka aplikasi. Seluruh pengujian unit dan pembangunan paket produksi frontend berhasil dengan sempurna.
+
 ### 14 November 2026, 21:15 WIB
 **Judul: Implementasi Microservice Autentikasi Mandiri (ServiceAuthTokoku), Hashing Password, JWT, dan Database tokoku_user_db**
 - **Kategori**: Fitur Baru, Skema Database, Microservice

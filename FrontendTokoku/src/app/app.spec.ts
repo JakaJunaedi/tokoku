@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
+import { signal } from '@angular/core';
 import { App } from './app';
 import { ProductService } from './services/product.service';
 import { CategoryService } from './services/category.service';
+import { AuthService } from './services/auth.service';
 
 describe('App', () => {
   const mockProductService = {
@@ -23,13 +25,27 @@ describe('App', () => {
     deleteCategory: () => of(void 0)
   };
 
+  const mockAuthService = {
+    token: signal<string | null>(null),
+    currentUser: signal(null),
+    isAuthenticated: () => false,
+    isSuperAdmin: () => false,
+    login: () => of({ token: 'mock-jwt', expiration: '', user: { id: 1, fullName: 'Admin', role: 'SuperAdmin' } }),
+    register: () => of({ token: 'mock-jwt', expiration: '', user: { id: 2, fullName: 'User', role: 'User' } }),
+    logout: () => {},
+    forgotPassword: () => of({ message: 'Success', resetToken: 'mock-token' }),
+    resetPassword: () => of({ message: 'Success' }),
+    createSuperadmin: () => of({ id: 3, fullName: 'Superadmin', role: 'SuperAdmin' })
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [App],
       providers: [
         provideHttpClient(),
         { provide: ProductService, useValue: mockProductService },
-        { provide: CategoryService, useValue: mockCategoryService }
+        { provide: CategoryService, useValue: mockCategoryService },
+        { provide: AuthService, useValue: mockAuthService }
       ]
     }).compileComponents();
   });

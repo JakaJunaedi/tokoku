@@ -27,7 +27,11 @@
       <div class="nav-actions">
         <span class="status-badge">
           <span class="status-dot"></span>
-          Backend :5242
+          API :5242
+        </span>
+        <span class="status-badge auth">
+          <span class="status-dot"></span>
+          Auth :5251
         </span>
         <button class="btn btn-outline" (click)="refreshAll()" [disabled]="isProductLoading() || isCategoryLoading()" title="Muat Ulang Data">
           <svg class="btn-icon" [class.spin]="isProductLoading() || isCategoryLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,6 +39,32 @@
           </svg>
           Segarkan
         </button>
+
+        @if (authService.isAuthenticated()) {
+          <div class="user-profile-badge">
+            <span class="user-role-tag" [class.role-superadmin]="authService.isSuperAdmin()">
+              {{ authService.currentUser()?.role }}
+            </span>
+            <span class="user-name">{{ authService.currentUser()?.fullName }}</span>
+          </div>
+
+          @if (authService.isSuperAdmin()) {
+            <button class="btn btn-sm btn-gold" (click)="openSuperadminModal()" title="Tambah Superadmin Baru">
+              + Superadmin
+            </button>
+          }
+
+          <button class="btn btn-sm btn-outline-danger" (click)="logout()" title="Keluar">
+            Keluar
+          </button>
+        } @else {
+          <button class="btn btn-sm btn-outline" (click)="openAuthModal('login')">
+            Masuk
+          </button>
+          <button class="btn btn-sm btn-primary" (click)="openAuthModal('register')">
+            Daftar
+          </button>
+        }
       </div>
     </div>
   </header>
@@ -572,6 +602,365 @@
             }
           </button>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Autentikasi (Masuk / Daftar / Lupa Password / Reset Password) -->
+  @if (isAuthModalOpen()) {
+    <div class="modal-backdrop" (click)="closeAuthModal()">
+      <div class="modal-card modal-auth" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">
+            @switch (authTab()) {
+              @case ('login') { Masuk ke Akun Tokoku }
+              @case ('register') { Buat Akun Baru }
+              @case ('forgot') { Lupa Kata Sandi }
+              @case ('reset') { Atur Ulang Kata Sandi }
+            }
+          </h2>
+          <button class="modal-close-btn" (click)="closeAuthModal()">✕</button>
+        </div>
+
+        <div class="auth-tabs">
+          <button 
+            type="button" 
+            class="auth-tab-btn" 
+            [class.active]="authTab() === 'login'"
+            (click)="authTab.set('login'); authError.set(null)">
+            Masuk
+          </button>
+          <button 
+            type="button" 
+            class="auth-tab-btn" 
+            [class.active]="authTab() === 'register'"
+            (click)="authTab.set('register'); authError.set(null)">
+            Daftar
+          </button>
+          <button 
+            type="button" 
+            class="auth-tab-btn" 
+            [class.active]="authTab() === 'forgot' || authTab() === 'reset'"
+            (click)="authTab.set('forgot'); authError.set(null)">
+            Reset Password
+          </button>
+        </div>
+
+        @if (authError()) {
+          <div class="form-error-banner mx-4 mt-3">
+            {{ authError() }}
+          </div>
+        }
+
+        <!-- TAB LOGIN -->
+        @if (authTab() === 'login') {
+          <form (ngSubmit)="submitLogin()">
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input 
+                  id="loginEmail"
+                  name="loginEmail"
+                  type="email" 
+                  [(ngModel)]="loginEmail"
+                  placeholder="nama@email.com"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                  autofocus
+                />
+              </div>
+
+              <div class="form-group">
+                <div class="flex-between">
+                  <label for="loginPassword">Password</label>
+                  <a href="javascript:void(0)" class="link-subtle text-xs" (click)="authTab.set('forgot'); authError.set(null)">
+                    Lupa Password?
+                  </a>
+                </div>
+                <input 
+                  id="loginPassword"
+                  name="loginPassword"
+                  type="password" 
+                  [(ngModel)]="loginPassword"
+                  placeholder="Masukkan kata sandi..."
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="closeAuthModal()" [disabled]="isAuthSubmitting()">
+                Batal
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Memverifikasi...
+                } @else {
+                  Masuk Sekarang
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- TAB REGISTER -->
+        @if (authTab() === 'register') {
+          <form (ngSubmit)="submitRegister()">
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="registerFullName">Nama Lengkap</label>
+                <input 
+                  id="registerFullName"
+                  name="registerFullName"
+                  type="text" 
+                  [(ngModel)]="registerFullName"
+                  placeholder="Contoh: Budi Santoso"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                  autofocus
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="registerEmail">Alamat Email</label>
+                <input 
+                  id="registerEmail"
+                  name="registerEmail"
+                  type="email" 
+                  [(ngModel)]="registerEmail"
+                  placeholder="budi@example.com"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="registerPassword">Password (Minimal 6 karakter)</label>
+                <input 
+                  id="registerPassword"
+                  name="registerPassword"
+                  type="password" 
+                  [(ngModel)]="registerPassword"
+                  placeholder="Minimal 6 karakter..."
+                  class="form-control"
+                  minlength="6"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="closeAuthModal()" [disabled]="isAuthSubmitting()">
+                Batal
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Mendaftarkan...
+                } @else {
+                  Daftar Akun Baru
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- TAB FORGOT PASSWORD -->
+        @if (authTab() === 'forgot') {
+          <form (ngSubmit)="submitForgotPassword()">
+            <div class="modal-body">
+              <p class="text-sm text-muted mb-3">
+                Masukkan email Anda yang terdaftar. Sistem akan menghasilkan token reset password yang aman.
+              </p>
+
+              <div class="form-group">
+                <label for="forgotEmail">Alamat Email Terdaftar</label>
+                <input 
+                  id="forgotEmail"
+                  name="forgotEmail"
+                  type="email" 
+                  [(ngModel)]="forgotEmail"
+                  placeholder="nama@email.com"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                  autofocus
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="authTab.set('login')">
+                Kembali ke Login
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Mengirim...
+                } @else {
+                  Dapatkan Token Reset
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- TAB RESET PASSWORD (CONFIRM) -->
+        @if (authTab() === 'reset') {
+          <form (ngSubmit)="submitResetPassword()">
+            <div class="modal-body">
+              @if (generatedResetToken()) {
+                <div class="token-alert-box mb-3">
+                  <div class="token-alert-title">Token Reset Password Dihasilkan:</div>
+                  <div class="token-code">{{ generatedResetToken() }}</div>
+                  <div class="text-xs text-muted mt-1">Token telah otomatis diisikan di formulir bawah ini.</div>
+                </div>
+              }
+
+              <div class="form-group">
+                <label for="resetTokenInput">Token Reset</label>
+                <input 
+                  id="resetTokenInput"
+                  name="resetTokenInput"
+                  type="text" 
+                  [(ngModel)]="resetTokenInput"
+                  placeholder="Paste token reset di sini..."
+                  class="form-control font-mono"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="resetNewPassword">Password Baru</label>
+                <input 
+                  id="resetNewPassword"
+                  name="resetNewPassword"
+                  type="password" 
+                  [(ngModel)]="resetNewPassword"
+                  placeholder="Password baru minimal 6 karakter..."
+                  class="form-control"
+                  minlength="6"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="authTab.set('login')">
+                Batal
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Menyimpan...
+                } @else {
+                  Simpan Password Baru
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Modal Tambah Superadmin Baru -->
+  @if (isSuperadminModalOpen()) {
+    <div class="modal-backdrop" (click)="closeSuperadminModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Tambah Akun Superadmin Baru</h2>
+          <button class="modal-close-btn" (click)="closeSuperadminModal()">✕</button>
+        </div>
+
+        <form (ngSubmit)="submitCreateSuperadmin()">
+          <div class="modal-body">
+            @if (superadminError()) {
+              <div class="form-error-banner">
+                {{ superadminError() }}
+              </div>
+            }
+
+            <p class="text-sm text-muted mb-3">
+              Akun Superadmin memiliki hak akses penuh terhadap seluruh sistem dan pengelolaan data pengguna.
+            </p>
+
+            <div class="form-group">
+              <label for="superadminFullName">Nama Lengkap Superadmin <span class="required">*</span></label>
+              <input 
+                id="superadminFullName"
+                name="superadminFullName"
+                type="text" 
+                [(ngModel)]="superadminFullName"
+                placeholder="Contoh: Administrator Utama"
+                class="form-control"
+                [disabled]="isSuperadminSubmitting()"
+                required
+                autofocus
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="superadminEmail">Email Superadmin <span class="required">*</span></label>
+              <input 
+                id="superadminEmail"
+                name="superadminEmail"
+                type="email" 
+                [(ngModel)]="superadminEmail"
+                placeholder="superadmin2@tokoku.com"
+                class="form-control"
+                [disabled]="isSuperadminSubmitting()"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="superadminPassword">Password (Minimal 6 karakter) <span class="required">*</span></label>
+              <input 
+                id="superadminPassword"
+                name="superadminPassword"
+                type="password" 
+                [(ngModel)]="superadminPassword"
+                placeholder="Kata sandi superadmin..."
+                class="form-control"
+                minlength="6"
+                [disabled]="isSuperadminSubmitting()"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="superadminMasterKey">Master Key (Opsional jika login sebagai Superadmin)</label>
+              <input 
+                id="superadminMasterKey"
+                name="superadminMasterKey"
+                type="password" 
+                [(ngModel)]="superadminMasterKey"
+                placeholder="Masukkan Master Key jika belum login..."
+                class="form-control"
+                [disabled]="isSuperadminSubmitting()"
+              />
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeSuperadminModal()" [disabled]="isSuperadminSubmitting()">
+              Batal
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSuperadminSubmitting()">
+              @if (isSuperadminSubmitting()) {
+                <span class="spinner-sm"></span> Menyimpan...
+              } @else {
+                Buat Superadmin
+              }
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   }

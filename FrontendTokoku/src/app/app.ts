@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from './services/product.service';
 import { CategoryService } from './services/category.service';
+import { AuthService } from './services/auth.service';
 import { Product } from './models/product.model';
 import { Category } from './models/category.model';
 
@@ -16,6 +17,7 @@ import { Category } from './models/category.model';
 export class App implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly categoryService = inject(CategoryService);
+  readonly authService = inject(AuthService);
 
   // Active Navigation Tab
   readonly activeTab = signal<'products' | 'categories'>('products');
@@ -58,6 +60,36 @@ export class App implements OnInit {
   categoryNameInput = '';
   categoryDescInput = '';
   categoryFormError = '';
+
+  // ================= AUTH STATES =================
+  readonly isAuthModalOpen = signal<boolean>(false);
+  readonly authTab = signal<'login' | 'register' | 'forgot' | 'reset'>('login');
+  readonly isAuthSubmitting = signal<boolean>(false);
+  readonly authError = signal<string | null>(null);
+  readonly generatedResetToken = signal<string | null>(null);
+
+  // Auth Form Fields
+  loginEmail = '';
+  loginPassword = '';
+
+  registerFullName = '';
+  registerEmail = '';
+  registerPassword = '';
+
+  forgotEmail = '';
+
+  resetTokenInput = '';
+  resetNewPassword = '';
+
+  // Superadmin Modal State
+  readonly isSuperadminModalOpen = signal<boolean>(false);
+  readonly isSuperadminSubmitting = signal<boolean>(false);
+  readonly superadminError = signal<string | null>(null);
+
+  superadminFullName = '';
+  superadminEmail = '';
+  superadminPassword = '';
+  superadminMasterKey = '';
 
   // Computed Values - Products
   readonly filteredProducts = computed(() => {
@@ -126,7 +158,7 @@ export class App implements OnInit {
       },
       error: (err) => {
         console.error('Gagal mengambil data produk:', err);
-        this.errorMessage.set('Gagal terhubung ke backend API (http://localhost:5242). Pastikan backend aktif.');
+        this.errorMessage.set('Gagal terhubung ke backend API produk (http://localhost:5242). Pastikan backend aktif.');
         this.isProductLoading.set(false);
       }
     });
@@ -189,7 +221,6 @@ export class App implements OnInit {
       const id = this.activeProductId()!;
       this.productService.updateProduct(id, payload).subscribe({
         next: (updated) => {
-          // Relasi category
           const categoryObj = this.categories().find(c => c.id === categoryId);
           const fullProduct: Product = { ...updated, category: categoryObj };
           this.products.update(list => list.map(item => item.id === id ? fullProduct : item));
@@ -310,7 +341,6 @@ export class App implements OnInit {
       this.categoryService.updateCategory(id, { name, description }).subscribe({
         next: (updated) => {
           this.categories.update(list => list.map(item => item.id === id ? updated : item));
-          // Refresh products to sync category names
           this.fetchProducts();
           this.isSubmitting.set(false);
           this.closeCategoryModal();
@@ -357,7 +387,6 @@ export class App implements OnInit {
     this.categoryService.deleteCategory(target.id).subscribe({
       next: () => {
         this.categories.update(list => list.filter(item => item.id !== target.id));
-        // Refresh products because their category relation might be set null
         this.fetchProducts();
         this.isSubmitting.set(false);
         this.closeDeleteCategoryModal();
@@ -368,6 +397,195 @@ export class App implements OnInit {
         this.errorMessage.set('Gagal menghapus kategori. Silakan periksa koneksi.');
         this.isSubmitting.set(false);
         this.closeDeleteCategoryModal();
+      }
+    });
+  }
+
+  // ================= AUTHENTICATION ACTIONS =================
+
+  openAuthModal(tab: 'login' | 'register' | 'forgot' = 'login'): void {
+    this.authTab.set(tab);
+    this.authError.set(null);
+    this.generatedResetToken.set(null);
+    this.isAuthModalOpen.set(true);
+  }
+
+  closeAuthModal(): void {
+    this.isAuthModalOpen.set(false);
+    this.authError.set(null);
+    this.generatedResetToken.set(null);
+  }
+
+  submitLogin(): void {
+    if (!this.loginEmail || !this.loginPassword) {
+      this.authError.set('Email dan password wajib diisi.');
+      return;
+    }
+
+    this.isAuthSubmitting.set(true);
+    this.authError.set(null);
+
+    this.authService.login({ email: this.loginEmail, password: this.loginPassword }).subscribe({
+      next: (res) => {
+        this.isAuthSubmitting.set(false);
+        this.closeAuthModal();
+        this.loginEmail = '';
+        this.loginPassword = '';
+        this.showToast(`Selamat datang kembali, ${res.user.fullName}!`);
+      },
+      error: (err) => {
+        console.error(err);
+        this.isAuthSubmitting.set(false);
+        this.authError.set(err.error?.message || 'Email atau password salah. Pastikan Auth Service :5251 aktif.');
+      }
+    });
+  }
+
+  submitRegister(): void {
+    if (!this.registerFullName || !this.registerEmail || !this.registerPassword) {
+      this.authError.set('Semua field registrasi wajib diisi.');
+      return;
+    }
+
+    if (this.registerPassword.length < 6) {
+      this.authError.set('Password minimal terdiri dari 6 karakter.');
+      return;
+    }
+
+    this.isAuthSubmitting.set(true);
+    this.authError.set(null);
+
+    this.authService.register({
+      fullName: this.registerFullName,
+      email: this.registerEmail,
+      password: this.registerPassword
+    }).subscribe({
+      next: (res) => {
+        this.isAuthSubmitting.set(false);
+        this.closeAuthModal();
+        this.registerFullName = '';
+        this.registerEmail = '';
+        this.registerPassword = '';
+        this.showToast(`Registrasi berhasil! Selamat bergabung, ${res.user.fullName}.`);
+      },
+      error: (err) => {
+        console.error(err);
+        this.isAuthSubmitting.set(false);
+        this.authError.set(err.error?.message || 'Registrasi gagal. Email mungkin sudah terdaftar.');
+      }
+    });
+  }
+
+  submitForgotPassword(): void {
+    if (!this.forgotEmail) {
+      this.authError.set('Silakan masukkan email Anda.');
+      return;
+    }
+
+    this.isAuthSubmitting.set(true);
+    this.authError.set(null);
+
+    this.authService.forgotPassword({ email: this.forgotEmail }).subscribe({
+      next: (res) => {
+        this.isAuthSubmitting.set(false);
+        if (res.resetToken) {
+          this.generatedResetToken.set(res.resetToken);
+          this.resetTokenInput = res.resetToken;
+          this.authTab.set('reset');
+        } else {
+          this.showToast(res.message);
+          this.closeAuthModal();
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.isAuthSubmitting.set(false);
+        this.authError.set(err.error?.message || 'Gagal memproses permintaan reset password.');
+      }
+    });
+  }
+
+  submitResetPassword(): void {
+    if (!this.resetTokenInput || !this.resetNewPassword) {
+      this.authError.set('Token dan password baru wajib diisi.');
+      return;
+    }
+
+    if (this.resetNewPassword.length < 6) {
+      this.authError.set('Password baru minimal terdiri dari 6 karakter.');
+      return;
+    }
+
+    this.isAuthSubmitting.set(true);
+    this.authError.set(null);
+
+    this.authService.resetPassword({
+      email: this.forgotEmail,
+      token: this.resetTokenInput,
+      newPassword: this.resetNewPassword
+    }).subscribe({
+      next: (res) => {
+        this.isAuthSubmitting.set(false);
+        this.showToast(res.message || 'Password berhasil diperbarui!');
+        this.authTab.set('login');
+        this.resetTokenInput = '';
+        this.resetNewPassword = '';
+        this.generatedResetToken.set(null);
+      },
+      error: (err) => {
+        console.error(err);
+        this.isAuthSubmitting.set(false);
+        this.authError.set(err.error?.message || 'Token reset tidak valid atau telah kedaluwarsa.');
+      }
+    });
+  }
+
+  logout(): void {
+    const user = this.authService.currentUser();
+    this.authService.logout();
+    this.showToast(`Anda telah logout.${user ? ` Sampai jumpa, ${user.fullName}!` : ''}`);
+  }
+
+  // ================= SUPERADMIN MODAL =================
+
+  openSuperadminModal(): void {
+    this.superadminFullName = '';
+    this.superadminEmail = '';
+    this.superadminPassword = '';
+    this.superadminMasterKey = '';
+    this.superadminError.set(null);
+    this.isSuperadminModalOpen.set(true);
+  }
+
+  closeSuperadminModal(): void {
+    this.isSuperadminModalOpen.set(false);
+    this.superadminError.set(null);
+  }
+
+  submitCreateSuperadmin(): void {
+    if (!this.superadminFullName || !this.superadminEmail || !this.superadminPassword) {
+      this.superadminError.set('Nama, email, dan password wajib diisi.');
+      return;
+    }
+
+    this.isSuperadminSubmitting.set(true);
+    this.superadminError.set(null);
+
+    this.authService.createSuperadmin({
+      fullName: this.superadminFullName,
+      email: this.superadminEmail,
+      password: this.superadminPassword,
+      masterKey: this.superadminMasterKey || undefined
+    }).subscribe({
+      next: (user) => {
+        this.isSuperadminSubmitting.set(false);
+        this.closeSuperadminModal();
+        this.showToast(`Akun SuperAdmin baru "${user.fullName}" (${user.email}) berhasil dibuat!`);
+      },
+      error: (err) => {
+        console.error(err);
+        this.isSuperadminSubmitting.set(false);
+        this.superadminError.set(err.error?.message || 'Gagal membuat superadmin. Periksa hak akses atau master key.');
       }
     });
   }
