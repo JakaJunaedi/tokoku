@@ -4,27 +4,19 @@ import { of } from 'rxjs';
 import { signal } from '@angular/core';
 import { App } from './app';
 import { ProductService } from './services/product.service';
-import { CategoryService } from './services/category.service';
 import { AuthService } from './services/auth.service';
 
 describe('App', () => {
   let isAuthedState = false;
 
   const mockProductService = {
-    getProducts: () => of([]),
-    createProduct: () => of({ id: 1, name: 'Test', price: 1000 }),
-    updateProduct: () => of({ id: 1, name: 'Test Updated', price: 2000 }),
-    deleteProduct: () => of(void 0)
-  };
-
-  const mockCategoryService = {
-    getCategories: () => of([
-      { id: 1, name: 'Foods', description: 'Makanan dan minuman' },
-      { id: 2, name: 'Elektronik', description: 'Peralatan elektronik' }
+    getProducts: () => of([
+      { id: 1, name: 'Asus ROG', price: 20000000, stock: 5 },
+      { id: 2, name: 'Logitech Mouse', price: 500000, stock: 12 }
     ]),
-    createCategory: () => of({ id: 3, name: 'Obat-obatan' }),
-    updateCategory: () => of({ id: 1, name: 'Foods Updated' }),
-    deleteCategory: () => of(void 0)
+    createProduct: () => of({ id: 3, name: 'Keyboard', price: 750000, stock: 8 }),
+    updateProduct: () => of({ id: 1, name: 'Asus ROG Updated', price: 21000000, stock: 4 }),
+    deleteProduct: () => of(void 0)
   };
 
   const mockAuthService = {
@@ -50,7 +42,6 @@ describe('App', () => {
       providers: [
         provideHttpClient(),
         { provide: ProductService, useValue: mockProductService },
-        { provide: CategoryService, useValue: mockCategoryService },
         { provide: AuthService, useValue: mockAuthService }
       ]
     }).compileComponents();
@@ -80,9 +71,8 @@ describe('App', () => {
     // Guard requirement: auth modal opens automatically
     expect(app.isAuthModalOpen()).toBe(true);
     expect(app.authTab()).toBe('login');
-    // Products and categories not fetched when unauthenticated
+    // Products not fetched when unauthenticated
     expect(app.products().length).toBe(0);
-    expect(app.categories().length).toBe(0);
 
     // Protected view should display guard locked banner
     const compiled = fixture.nativeElement as HTMLElement;
@@ -90,7 +80,7 @@ describe('App', () => {
     expect(compiled.querySelector('.guard-title')?.textContent).toContain('Dashboard Produk Memerlukan Autentikasi');
   });
 
-  it('should load categories and products when authenticated', async () => {
+  it('should load products when authenticated', async () => {
     isAuthedState = true;
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
@@ -98,11 +88,11 @@ describe('App', () => {
     const app = fixture.componentInstance;
 
     expect(app.isAuthModalOpen()).toBe(false);
-    expect(app.categories().length).toBe(2);
+    expect(app.products().length).toBe(2);
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.auth-guard-container')).toBeFalsy();
-    expect(compiled.querySelector('.tabs-bar')).toBeTruthy();
+    expect(compiled.querySelector('.product-table')).toBeTruthy();
   });
 
   it('should open auth modal when unauthenticated user attempts to create product', () => {
