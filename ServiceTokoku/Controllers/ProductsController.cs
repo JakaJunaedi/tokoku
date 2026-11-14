@@ -54,7 +54,7 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] Product product)
     {
-        _logger.LogInformation("Request POST /api/products diterima: Data payload {@Product}", new { product.Name, product.Price, product.Stock, product.CategoryId });
+        _logger.LogInformation("Request POST /api/products diterima: Data payload {@Product}", new { product.Name, product.Price, product.Stock });
 
         if (string.IsNullOrWhiteSpace(product.Name))
         {
@@ -85,7 +85,7 @@ public class ProductsController : ControllerBase
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] Product product)
     {
-        _logger.LogInformation("Request PUT /api/products/{Id} diterima: Data update {@Product}", id, new { product.Name, product.Price, product.Stock, product.CategoryId });
+        _logger.LogInformation("Request PUT /api/products/{Id} diterima: Data update {@Product}", id, new { product.Name, product.Price, product.Stock });
 
         if (string.IsNullOrWhiteSpace(product.Name))
         {

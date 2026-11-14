@@ -7,8 +7,4 @@ public class Product
     public decimal Price { get; set; }
     public int Stock { get; set; } = 0;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-    // Relasi ke Category
-    public int? CategoryId { get; set; }
-    public Category? Category { get; set; }
 }
