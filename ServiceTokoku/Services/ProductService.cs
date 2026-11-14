@@ -53,7 +53,6 @@ public class ProductService : IProductService
         existing.Name = product.Name;
         existing.Price = product.Price;
         existing.Stock = product.Stock;
-        existing.Discount = product.Discount;
         existing.CategoryId = product.CategoryId;
 
         _logger.LogDebug("Menyimpan pembaruan entitas ID={Id} ke PostgreSQL...", id);

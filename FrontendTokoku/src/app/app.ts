@@ -39,7 +39,6 @@ export class App implements OnInit {
   nameInput = '';
   priceInput: number | null = null;
   stockInput: number | null = null;
-  discountInput: number | null = null;
   categoryIdInput: number | null = null;
   formError = '';
 
@@ -139,7 +138,6 @@ export class App implements OnInit {
     this.nameInput = '';
     this.priceInput = null;
     this.stockInput = null;
-    this.discountInput = null;
     this.categoryIdInput = null;
     this.formError = '';
     this.isModalOpen.set(true);
@@ -151,7 +149,6 @@ export class App implements OnInit {
     this.nameInput = product.name;
     this.priceInput = product.price;
     this.stockInput = product.stock ?? 0;
-    this.discountInput = product.discount ?? 0;
     this.categoryIdInput = product.categoryId ?? null;
     this.formError = '';
     this.isModalOpen.set(true);
@@ -166,7 +163,6 @@ export class App implements OnInit {
     const name = this.nameInput.trim();
     const price = Number(this.priceInput);
     const stock = this.stockInput === null || isNaN(Number(this.stockInput)) ? 0 : Number(this.stockInput);
-    const discount = this.discountInput === null || isNaN(Number(this.discountInput)) ? 0 : Number(this.discountInput);
     const categoryId = this.categoryIdInput ? Number(this.categoryIdInput) : null;
 
     if (!name) {
@@ -184,20 +180,10 @@ export class App implements OnInit {
       return;
     }
 
-    if (discount < 0) {
-      this.formError = 'Diskon produk tidak boleh bernilai negatif.';
-      return;
-    }
-
-    if (discount > price) {
-      this.formError = 'Diskon tidak boleh melebihi harga produk.';
-      return;
-    }
-
     this.isSubmitting.set(true);
     this.formError = '';
 
-    const payload = { name, price, stock, discount, categoryId };
+    const payload = { name, price, stock, categoryId };
 
     if (this.isEditing() && this.activeProductId()) {
       const id = this.activeProductId()!;

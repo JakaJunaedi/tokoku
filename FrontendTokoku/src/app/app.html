@@ -183,7 +183,6 @@
                 <th>Nama Produk</th>
                 <th>Kategori</th>
                 <th class="text-right">Harga Satuan</th>
-                <th class="text-right">Diskon</th>
                 <th class="text-center w-24">Stok</th>
                 <th>Tanggal Dibuat</th>
                 <th class="text-center w-36">Aksi</th>
@@ -205,13 +204,6 @@
                   </td>
                   <td class="text-right font-semibold text-price">
                     {{ formatRupiah(product.price) }}
-                  </td>
-                  <td class="text-right">
-                    @if ((product.discount ?? 0) > 0) {
-                      <span class="discount-badge">-{{ formatRupiah(product.discount) }}</span>
-                    } @else {
-                      <span class="text-muted text-sm">-</span>
-                    }
                   </td>
                   <td class="text-center">
                     <span class="stock-badge" [class.stock-empty]="(product.stock ?? 0) === 0">
@@ -437,21 +429,6 @@
                 class="form-control"
                 min="0"
                 step="1"
-                [disabled]="isSubmitting()"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="discount">Diskon (Rp)</label>
-              <input 
-                id="discount"
-                name="discount"
-                type="number" 
-                [(ngModel)]="discountInput"
-                placeholder="Contoh: 50000"
-                class="form-control"
-                min="0"
-                step="1000"
                 [disabled]="isSubmitting()"
               />
             </div>
