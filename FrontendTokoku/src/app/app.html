@@ -27,179 +27,264 @@
       <div class="nav-actions">
         <span class="status-badge">
           <span class="status-dot"></span>
-          Backend :5242
+          API :5242
         </span>
-        <button class="btn btn-outline" (click)="fetchProducts()" [disabled]="isProductLoading()" title="Muat Ulang Data">
+        <span class="status-badge auth">
+          <span class="status-dot"></span>
+          Auth :5251
+        </span>
+        <button class="btn btn-outline" (click)="refreshAll()" [disabled]="isProductLoading()" title="Muat Ulang Data">
           <svg class="btn-icon" [class.spin]="isProductLoading()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
           Segarkan
         </button>
+
+        @if (authService.isAuthenticated()) {
+          <div class="user-profile-badge">
+            <span class="user-role-tag" [class.role-superadmin]="authService.isSuperAdmin()">
+              {{ authService.currentUser()?.role }}
+            </span>
+            <span class="user-name">{{ authService.currentUser()?.fullName }}</span>
+          </div>
+
+          @if (authService.isSuperAdmin()) {
+            <button class="btn btn-sm btn-gold" (click)="openSuperadminModal()" title="Tambah Superadmin Baru">
+              + Superadmin
+            </button>
+          }
+
+          <button class="btn btn-sm btn-outline-danger" (click)="logout()" title="Keluar">
+            Keluar
+          </button>
+        } @else {
+          <button class="btn btn-sm btn-outline" (click)="openAuthModal('login')">
+            Masuk
+          </button>
+          <button class="btn btn-sm btn-primary" (click)="openAuthModal('register')">
+            Daftar
+          </button>
+        }
       </div>
     </div>
   </header>
 
   <main class="main-content">
-    <!-- Error Alert -->
-    @if (errorMessage()) {
-      <div class="alert alert-danger">
-        <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-        </svg>
-        <div class="alert-content">
-          <strong>Koneksi Gagal:</strong> {{ errorMessage() }}
-        </div>
-        <button class="btn-retry" (click)="fetchProducts()">Coba Lagi</button>
-      </div>
-    }
-
-    <!-- Stat Summary Cards -->
-    <section class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-info">
-          <span class="stat-label">Total Produk</span>
-          <span class="stat-value">{{ totalProducts() }}</span>
-        </div>
-        <div class="stat-icon-wrapper blue">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+    @if (authService.isAuthenticated()) {
+      <!-- Error Alert -->
+      @if (errorMessage()) {
+        <div class="alert alert-danger">
+          <svg class="alert-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
           </svg>
+          <div class="alert-content">
+            <strong>Koneksi Gagal:</strong> {{ errorMessage() }}
+          </div>
+          <button class="btn-retry" (click)="refreshAll()">Coba Lagi</button>
         </div>
-      </div>
+      }
 
-      <div class="stat-card">
-        <div class="stat-info">
-          <span class="stat-label">Estimasi Nilai Stok</span>
-          <span class="stat-value">{{ formatRupiah(totalInventoryValue()) }}</span>
+      <!-- Stat Summary Cards -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Total Produk</span>
+            <span class="stat-value">{{ totalProducts() }}</span>
+          </div>
+          <div class="stat-icon-wrapper blue">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+          </div>
         </div>
-        <div class="stat-icon-wrapper green">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Total Nilai Inventaris</span>
+            <span class="stat-value">{{ formatRupiah(totalInventoryValue()) }}</span>
+          </div>
+          <div class="stat-icon-wrapper green">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-info">
+            <span class="stat-label">Rata-rata Harga</span>
+            <span class="stat-value">{{ formatRupiah(averagePrice()) }}</span>
+          </div>
+          <div class="stat-icon-wrapper purple">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Toolbar / Action Bar -->
+      <section class="toolbar-card">
+        <div class="search-box">
+          <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
+          <input 
+            type="text" 
+            placeholder="Cari berdasarkan nama produk..." 
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            class="search-input"
+          />
+          @if (searchQuery()) {
+            <button class="clear-search" (click)="searchQuery.set('')">✕</button>
+          }
         </div>
-      </div>
 
-      <div class="stat-card">
-        <div class="stat-info">
-          <span class="stat-label">Rata-rata Harga</span>
-          <span class="stat-value">{{ formatRupiah(averagePrice()) }}</span>
-        </div>
-        <div class="stat-icon-wrapper purple">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-          </svg>
-        </div>
-      </div>
-    </section>
-
-    <!-- Toolbar: Search & Action Buttons -->
-    <section class="toolbar">
-      <div class="search-box">
-        <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-        </svg>
-        <input 
-          type="text" 
-          [ngModel]="searchQuery()" 
-          (ngModelChange)="searchQuery.set($event)"
-          placeholder="Cari berdasarkan nama produk..."
-          class="search-input"
-        />
-        @if (searchQuery()) {
-          <button class="clear-btn" (click)="searchQuery.set('')">✕</button>
-        }
-      </div>
-
-      <div class="toolbar-actions">
         <button class="btn btn-primary" (click)="openCreateModal()">
           <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
           Tambah Produk
         </button>
-      </div>
-    </section>
+      </section>
 
-    <!-- Product Table Section -->
-    <section class="table-container">
-      @if (isProductLoading()) {
-        <div class="loading-state">
-          <div class="spinner"></div>
-          <p>Memuat data produk dari database...</p>
-        </div>
-      } @else if (filteredProducts().length === 0) {
-        <div class="empty-state">
-          <div class="empty-icon-wrapper">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+      <!-- Products Table -->
+      <section class="table-container">
+        @if (isProductLoading()) {
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Memuat data katalog produk...</p>
+          </div>
+        } @else if (filteredProducts().length === 0) {
+          <div class="empty-state">
+            <div class="empty-icon-box">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+              </svg>
+            </div>
+            <h3>Tidak Ada Produk</h3>
+            <p>
+              @if (searchQuery()) {
+                Tidak ada produk yang cocok dengan kata kunci "{{ searchQuery() }}".
+              } @else {
+                Katalog produk masih kosong. Mulai tambahkan produk pertama Anda sekarang!
+              }
+            </p>
+            @if (!searchQuery()) {
+              <button class="btn btn-primary mt-3" (click)="openCreateModal()">
+                Tambah Produk Sekarang
+              </button>
+            }
+          </div>
+        } @else {
+          <table class="product-table">
+            <thead>
+              <tr>
+                <th class="w-12">ID</th>
+                <th>Nama Produk</th>
+                <th class="text-right">Harga Satuan</th>
+                <th class="text-center w-24">Stok</th>
+                <th>Tanggal Dibuat</th>
+                <th class="text-center w-36">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (product of filteredProducts(); track product.id) {
+                <tr>
+                  <td class="text-muted font-mono">#{{ product.id }}</td>
+                  <td>
+                    <span class="product-name">{{ product.name }}</span>
+                  </td>
+                  <td class="text-right font-semibold text-price">
+                    {{ formatRupiah(product.price) }}
+                  </td>
+                  <td class="text-center">
+                    <span class="stock-badge" [class.stock-empty]="(product.stock ?? 0) === 0">
+                      {{ product.stock ?? 0 }} unit
+                    </span>
+                  </td>
+                  <td class="text-muted text-sm">
+                    {{ product.createdAt | date:'dd MMM yyyy, HH:mm' }}
+                  </td>
+                  <td class="text-center">
+                    <div class="action-buttons">
+                      <button class="btn-icon-action btn-edit" (click)="openEditModal(product)" title="Ubah Produk">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      <button class="btn-icon-action btn-delete" (click)="openDeleteModal(product)" title="Hapus Produk">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    } @else {
+      <!-- Auth Guard Screen (Terkunci Sebelum Login) -->
+      <section class="auth-guard-container">
+        <div class="auth-guard-card">
+          <div class="guard-icon-halo">
+            <svg class="guard-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
             </svg>
           </div>
-          <h3 class="empty-title">
-            {{ searchQuery() ? 'Produk Tidak Ditemukan' : 'Belum Ada Produk' }}
-          </h3>
-          <p class="empty-desc">
-            @if (searchQuery()) {
-              Tidak ada produk yang cocok dengan kata kunci "{{ searchQuery() }}".
-            } @else {
-              Mulai kelola inventaris Anda dengan menambahkan produk pertama.
-            }
+          <span class="guard-badge">
+            <span class="guard-dot"></span>
+            Akses Terproteksi Guard
+          </span>
+          <h2 class="guard-title">Dashboard Produk Memerlukan Autentikasi</h2>
+          <p class="guard-desc">
+            Katalog produk dan manajemen inventaris stok dilindungi oleh sistem otorisasi JWT Tokoku. Silakan masuk dengan akun terdaftar atau daftarkan akun baru untuk membuka dashboard.
           </p>
-          @if (!searchQuery()) {
-            <button class="btn btn-primary mt-3" (click)="openCreateModal()">
-              Tambah Produk Sekarang
+
+          <div class="guard-actions">
+            <button class="btn btn-primary btn-lg" (click)="openAuthModal('login')">
+              <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+              </svg>
+              Masuk ke Akun Tokoku
             </button>
-          }
+            <button class="btn btn-outline btn-lg" (click)="openAuthModal('register')">
+              Daftar Akun Baru
+            </button>
+          </div>
+
+          <div class="guard-features-grid">
+            <div class="guard-feature-item">
+              <div class="feature-icon-wrapper blue">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h4>Katalog Produk & Inventaris</h4>
+                <p>Kelola data nama barang, harga satuan, dan kuantitas stok real-time.</p>
+              </div>
+            </div>
+
+            <div class="guard-feature-item">
+              <div class="feature-icon-wrapper indigo">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+              </div>
+              <div class="feature-text">
+                <h4>Keamanan JWT & SuperAdmin</h4>
+                <p>Proteksi data level enterprise dengan BCrypt hashing dan otoritas SuperAdmin.</p>
+              </div>
+            </div>
+          </div>
         </div>
-      } @else {
-        <table class="product-table">
-          <thead>
-            <tr>
-              <th class="w-12">ID</th>
-              <th>Nama Produk</th>
-              <th class="text-right">Harga Satuan</th>
-              <th class="text-center w-24">Stok</th>
-              <th>Tanggal Dibuat</th>
-              <th class="text-center w-36">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (product of filteredProducts(); track product.id) {
-              <tr>
-                <td class="text-muted font-mono">#{{ product.id }}</td>
-                <td>
-                  <span class="product-name">{{ product.name }}</span>
-                </td>
-                <td class="text-right font-semibold text-price">
-                  {{ formatRupiah(product.price) }}
-                </td>
-                <td class="text-center">
-                  <span class="stock-badge" [class.stock-empty]="(product.stock ?? 0) === 0">
-                    {{ product.stock ?? 0 }} unit
-                  </span>
-                </td>
-                <td class="text-muted text-sm">
-                  {{ product.createdAt | date:'dd MMM yyyy, HH:mm' }}
-                </td>
-                <td class="text-center">
-                  <div class="action-buttons">
-                    <button class="btn-icon-action btn-edit" (click)="openEditModal(product)" title="Ubah Produk">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                      </svg>
-                    </button>
-                    <button class="btn-icon-action btn-delete" (click)="openDeleteModal(product)" title="Hapus Produk">
-                      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      }
-    </section>
+      </section>
+    }
   </main>
 
   <!-- Modal Form Produk (Tambah / Edit) -->
@@ -311,6 +396,365 @@
             }
           </button>
         </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Autentikasi (Masuk / Daftar / Lupa Password / Reset Password) -->
+  @if (isAuthModalOpen()) {
+    <div class="modal-backdrop" (click)="closeAuthModal()">
+      <div class="modal-card modal-auth" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">
+            @switch (authTab()) {
+              @case ('login') { Masuk ke Akun Tokoku }
+              @case ('register') { Buat Akun Baru }
+              @case ('forgot') { Lupa Kata Sandi }
+              @case ('reset') { Atur Ulang Kata Sandi }
+            }
+          </h2>
+          <button class="modal-close-btn" (click)="closeAuthModal()">✕</button>
+        </div>
+
+        <div class="auth-tabs">
+          <button 
+            type="button" 
+            class="auth-tab-btn" 
+            [class.active]="authTab() === 'login'"
+            (click)="authTab.set('login'); authError.set(null)">
+            Masuk
+          </button>
+          <button 
+            type="button" 
+            class="auth-tab-btn" 
+            [class.active]="authTab() === 'register'"
+            (click)="authTab.set('register'); authError.set(null)">
+            Daftar
+          </button>
+          <button 
+            type="button" 
+            class="auth-tab-btn" 
+            [class.active]="authTab() === 'forgot' || authTab() === 'reset'"
+            (click)="authTab.set('forgot'); authError.set(null)">
+            Reset Password
+          </button>
+        </div>
+
+        @if (authError()) {
+          <div class="form-error-banner mx-4 mt-3">
+            {{ authError() }}
+          </div>
+        }
+
+        <!-- TAB LOGIN -->
+        @if (authTab() === 'login') {
+          <form (ngSubmit)="submitLogin()">
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="loginEmail">Email</label>
+                <input 
+                  id="loginEmail"
+                  name="loginEmail"
+                  type="email" 
+                  [(ngModel)]="loginEmail"
+                  placeholder="nama@email.com"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                  autofocus
+                />
+              </div>
+
+              <div class="form-group">
+                <div class="flex-between">
+                  <label for="loginPassword">Password</label>
+                  <a href="javascript:void(0)" class="link-subtle text-xs" (click)="authTab.set('forgot'); authError.set(null)">
+                    Lupa Password?
+                  </a>
+                </div>
+                <input 
+                  id="loginPassword"
+                  name="loginPassword"
+                  type="password" 
+                  [(ngModel)]="loginPassword"
+                  placeholder="Masukkan kata sandi..."
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="closeAuthModal()" [disabled]="isAuthSubmitting()">
+                Batal
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Memverifikasi...
+                } @else {
+                  Masuk Sekarang
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- TAB REGISTER -->
+        @if (authTab() === 'register') {
+          <form (ngSubmit)="submitRegister()">
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="registerFullName">Nama Lengkap</label>
+                <input 
+                  id="registerFullName"
+                  name="registerFullName"
+                  type="text" 
+                  [(ngModel)]="registerFullName"
+                  placeholder="Contoh: Budi Santoso"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                  autofocus
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="registerEmail">Alamat Email</label>
+                <input 
+                  id="registerEmail"
+                  name="registerEmail"
+                  type="email" 
+                  [(ngModel)]="registerEmail"
+                  placeholder="budi@example.com"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="registerPassword">Password (Minimal 6 karakter)</label>
+                <input 
+                  id="registerPassword"
+                  name="registerPassword"
+                  type="password" 
+                  [(ngModel)]="registerPassword"
+                  placeholder="Minimal 6 karakter..."
+                  class="form-control"
+                  minlength="6"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="closeAuthModal()" [disabled]="isAuthSubmitting()">
+                Batal
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Mendaftarkan...
+                } @else {
+                  Daftar Akun Baru
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- TAB FORGOT PASSWORD -->
+        @if (authTab() === 'forgot') {
+          <form (ngSubmit)="submitForgotPassword()">
+            <div class="modal-body">
+              <p class="text-sm text-muted mb-3">
+                Masukkan email Anda yang terdaftar. Sistem akan menghasilkan token reset password yang aman.
+              </p>
+
+              <div class="form-group">
+                <label for="forgotEmail">Alamat Email Terdaftar</label>
+                <input 
+                  id="forgotEmail"
+                  name="forgotEmail"
+                  type="email" 
+                  [(ngModel)]="forgotEmail"
+                  placeholder="nama@email.com"
+                  class="form-control"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                  autofocus
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="authTab.set('login')">
+                Kembali ke Login
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Mengirim...
+                } @else {
+                  Dapatkan Token Reset
+                }
+              </button>
+            </div>
+          </form>
+        }
+
+        <!-- TAB RESET PASSWORD (CONFIRM) -->
+        @if (authTab() === 'reset') {
+          <form (ngSubmit)="submitResetPassword()">
+            <div class="modal-body">
+              @if (generatedResetToken()) {
+                <div class="token-alert-box mb-3">
+                  <div class="token-alert-title">Token Reset Password Dihasilkan:</div>
+                  <div class="token-code">{{ generatedResetToken() }}</div>
+                  <div class="text-xs text-muted mt-1">Token telah otomatis diisikan di formulir bawah ini.</div>
+                </div>
+              }
+
+              <div class="form-group">
+                <label for="resetTokenInput">Token Reset</label>
+                <input 
+                  id="resetTokenInput"
+                  name="resetTokenInput"
+                  type="text" 
+                  [(ngModel)]="resetTokenInput"
+                  placeholder="Paste token reset di sini..."
+                  class="form-control font-mono"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="resetNewPassword">Password Baru</label>
+                <input 
+                  id="resetNewPassword"
+                  name="resetNewPassword"
+                  type="password" 
+                  [(ngModel)]="resetNewPassword"
+                  placeholder="Password baru minimal 6 karakter..."
+                  class="form-control"
+                  minlength="6"
+                  [disabled]="isAuthSubmitting()"
+                  required
+                />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline" (click)="authTab.set('login')">
+                Batal
+              </button>
+              <button type="submit" class="btn btn-primary" [disabled]="isAuthSubmitting()">
+                @if (isAuthSubmitting()) {
+                  <span class="spinner-sm"></span> Menyimpan...
+                } @else {
+                  Simpan Password Baru
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Modal Tambah Superadmin Baru -->
+  @if (isSuperadminModalOpen()) {
+    <div class="modal-backdrop" (click)="closeSuperadminModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2 class="modal-title">Tambah Akun Superadmin Baru</h2>
+          <button class="modal-close-btn" (click)="closeSuperadminModal()">✕</button>
+        </div>
+
+        <form (ngSubmit)="submitCreateSuperadmin()">
+          <div class="modal-body">
+            @if (superadminError()) {
+              <div class="form-error-banner">
+                {{ superadminError() }}
+              </div>
+            }
+
+            <p class="text-sm text-muted mb-3">
+              Akun Superadmin memiliki hak akses penuh terhadap seluruh sistem dan pengelolaan data pengguna.
+            </p>
+
+            <div class="form-group">
+              <label for="superadminFullName">Nama Lengkap Superadmin <span class="required">*</span></label>
+              <input 
+                id="superadminFullName"
+                name="superadminFullName"
+                type="text" 
+                [(ngModel)]="superadminFullName"
+                placeholder="Contoh: Administrator Utama"
+                class="form-control"
+                [disabled]="isSuperadminSubmitting()"
+                required
+                autofocus
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="superadminEmail">Email Superadmin <span class="required">*</span></label>
+              <input 
+                id="superadminEmail"
+                name="superadminEmail"
+                type="email" 
+                [(ngModel)]="superadminEmail"
+                placeholder="superadmin2@tokoku.com"
+                class="form-control"
+                [disabled]="isSuperadminSubmitting()"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="superadminPassword">Password (Minimal 6 karakter) <span class="required">*</span></label>
+              <input 
+                id="superadminPassword"
+                name="superadminPassword"
+                type="password" 
+                [(ngModel)]="superadminPassword"
+                placeholder="Kata sandi superadmin..."
+                class="form-control"
+                minlength="6"
+                [disabled]="isSuperadminSubmitting()"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="superadminMasterKey">Master Key (Opsional jika login sebagai Superadmin)</label>
+              <input 
+                id="superadminMasterKey"
+                name="superadminMasterKey"
+                type="password" 
+                [(ngModel)]="superadminMasterKey"
+                placeholder="Masukkan Master Key jika belum login..."
+                class="form-control"
+                [disabled]="isSuperadminSubmitting()"
+              />
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" (click)="closeSuperadminModal()" [disabled]="isSuperadminSubmitting()">
+              Batal
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="isSuperadminSubmitting()">
+              @if (isSuperadminSubmitting()) {
+                <span class="spinner-sm"></span> Menyimpan...
+              } @else {
+                Buat Superadmin
+              }
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   }

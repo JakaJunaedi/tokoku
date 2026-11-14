@@ -15,6 +15,26 @@ Setiap catatan perubahan disajikan dengan struktur:
 
 ## Riwayat Perubahan & Aktivitas
 
+### 14 November 2026, 23:45 WIB
+**Judul: Resolusi Insiden Error Relasi Kategori dan Penggabungan Branch feature/category ke feature/auth**
+- **Kategori**: Insiden Teknis, Git Merge, Sinkronisasi Skema
+- **Deskripsi**: Terjadi kegagalan pemanggilan data produk pada endpoint backend ServiceTokoku dengan respons kode 500 akibat kueri pencarian produk masih menyertakan relasi entitas kategori yang tabel fisiknya telah dihapus dari database PostgreSQL tokoku_db. Dilakukan investigasi mendalam terhadap log aplikasi dan riwayat commit cabang. Masalah diatasi dengan menggabungkan branch feature/category ke dalam branch feature/auth, membersihkan referensi kategori pada model produk dan service backend, serta menyelaraskan antarmuka pengguna frontend dan pengujian unit. Seluruh proses kompilasi backend dan frontend serta pengujian unit diverifikasi sukses, dan data produk kembali dapat diambil secara normal.
+
+
+### 14 November 2026, 21:50 WIB
+**Judul: Implementasi Guard Protection dan Pembukaan Otomatis Modal Autentikasi pada Dashboard Tokoku**
+- **Kategori**: Keamanan, Antarmuka Pengguna, Frontend
+- **Deskripsi**: Menerapkan proteksi keamanan guard pada frontend Tokoku agar pengguna yang belum terautentikasi tidak dapat melihat, mengakses, memuat, maupun memanipulasi data inventaris produk sebelum berhasil melakukan login. Saat aplikasi pertama kali dimuat atau pengguna dalam status belum masuk, sistem secara otomatis memicu pembukaan modal form autentikasi pada tab masuk serta menyajikan tampilan layar guard khusus dengan status dashboard terkunci dan opsi masuk atau daftar. Seluruh pemanggilan fungsi pemuatan data dan aksi pengelolaan produk diproteksi sehingga hanya dapat diproses setelah token autentikasi tervalidasi. Saat pengguna berhasil masuk atau mendaftar, dashboard secara otomatis terbuka dan memuat seluruh data inventaris terkini. Dibuat pula berkas functional guard Angular terpisah sebagai standar proteksi rute di masa mendatang. Seluruh pengujian unit dan pembangunan paket produksi berhasil diverifikasi dengan predikat sukses.
+
+### 14 November 2026, 21:35 WIB
+**Judul: Integrasi Antarmuka Autentikasi Frontend Tokoku (Login, Register, Reset Password, dan Superadmin)**
+- **Kategori**: Fitur Baru, Frontend
+- **Deskripsi**: Menghubungkan aplikasi klien FrontendTokoku dengan layanan autentikasi ServiceAuthTokoku. Menyediakan AuthService dengan manajemen status token JWT dan profil pengguna yang tersimpan secara persisten di penyimpanan lokal peramban. Mengimplementasikan komponen visual antarmuka pada navbar berupa status indikator koneksi auth, informasi profil pengguna, badge penanda peran superadmin, tombol logout, serta tombol masuk dan daftar. Mengembangkan modal autentikasi terpadu dengan navigasi tab untuk masuk akun, pendaftaran akun baru, pengajuan token lupa kata sandi, serta pengubahan kata sandi baru. Menambahkan modal khusus bagi superadmin untuk mendaftarkan akun superadmin baru secara langsung dari antarmuka aplikasi. Seluruh pengujian unit dan pembangunan paket produksi frontend berhasil dengan sempurna.
+
+### 14 November 2026, 21:15 WIB
+**Judul: Implementasi Microservice Autentikasi Mandiri (ServiceAuthTokoku), Hashing Password, JWT, dan Database tokoku_user_db**
+- **Kategori**: Fitur Baru, Skema Database, Microservice
+- **Deskripsi**: Mengembangkan layanan autentikasi independen berbasis microservice yang dipisahkan ke dalam proyek ServiceAuthTokoku, Model.AuthTokoku, Database.AuthTokoku, dan Migration.AuthTokoku. Layanan ini menggunakan basis data PostgreSQL khusus bernama tokoku_user_db untuk mengelola entitas pengguna dan token reset password. Mengimplementasikan fitur pendaftaran akun baru, login dengan penerbitan token JWT terotentikasi, alur reset password berbasis token acak kriptografi aman, serta fitur penambahan superadmin baru dengan proteksi master key atau otorisasi peran superadmin. Dilengkapi dengan mekanisme auto-seeding akun superadmin awal saat startup jika belum ada di database. Seluruh kata sandi diamankan menggunakan algoritma hashing BCrypt, dan seluruh alur endpoint telah teruji dan terverifikasi secara fungsional.
 ### 14 November 2026, 20:38 WIB
 **Judul: Penghapusan Menyeluruh Tabel Kategori dan Relasinya pada Branch feature/category**
 - **Kategori**: Skema Database, Backend, Frontend, Dokumentasi
