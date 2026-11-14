@@ -3,4 +3,8 @@
   <Project Path="Migration.Tokoku/Migration.Tokoku.csproj" />
   <Project Path="Model.Tokoku/Model.Tokoku.csproj" />
   <Project Path="ServiceTokoku/ServiceTokoku.csproj" />
+  <Project Path="Database.AuthTokoku/Database.AuthTokoku.csproj" />
+  <Project Path="Migration.AuthTokoku/Migration.AuthTokoku.csproj" />
+  <Project Path="Model.AuthTokoku/Model.AuthTokoku.csproj" />
+  <Project Path="ServiceAuthTokoku/ServiceAuthTokoku.csproj" />
 </Solution>
